@@ -7,9 +7,23 @@
 - 반응형 메이크업 트렌드 대시보드
 - 클릭 가능한 콘셉트 카드 및 영상 갤러리
 - 브라우저 북마크, 검색, 카테고리 필터
-- GitHub Actions를 이용한 한국 시간 **매일 오전 9시 10분** 데이터 갱신 시도
+- GitHub Actions를 이용한 한국 시간 **2시간마다 17분** 데이터 갱신 시도
 - 실제 영상 원본 링크와 미검증 검색 키워드 구분
 - 원본 영상 수와 참여 크리에이터 수를 기반으로 한 **관측 점수** (플랫폼 알고리즘의 공식 순위가 아님)
+
+
+## Instagram 릴스 수집 활성화 (2026-11)
+
+Instagram의 **공개 릴스**를 수집하려면 Apify 계정의 API 토큰이 필요합니다. 공식 Meta Instagram 계정 연동이 아니라 제3자 공개 데이터 수집 방식이며, 실패·차단 또는 이용 요금이 발생할 수 있습니다.
+
+1. [Apify](https://console.apify.com/)에서 계정을 만든 뒤 **Settings → API & Integrations / API tokens**에서 API 토큰을 복사합니다. API 토큰을 코드나 공개 페이지에 붙여 넣지 마세요.
+2. [GitHub Actions secrets](https://github.com/yscho0422/muse-radar/settings/secrets/actions)에서 **New repository secret**을 클릭하고, Name: `APIFY_TOKEN`, Secret: Apify 토큰 값으로 저장합니다.
+3. [MUSE RADAR Actions](https://github.com/yscho0422/muse-radar/actions/workflows/daily-radar.yml)를 열어 **Run workflow → main → Run workflow**를 실행합니다. 작업 로그의 `Update trend data` 및 배포 성공 여부를 확인합니다.
+4. 성공하면 저장된 공개 릴스 URL과 썸네일이 사이트에 나타납니다. 최신 자료를 보려면 웹사이트의 **Refresh** 버튼을 누르면 됩니다.
+
+이 프로젝트의 스케줄은 **한국 시간 기준 2시간마다(0,2,4시 등 17분)** 한 번 실행을 시도합니다. 자동 수집량은 Instagram 태그당 최대 4개, 실행당 최대 3개 태그로 제한했습니다. 별도로 `ENABLE_TIKTOK=0`으로 TikTok 유료 검색을 꺼두었습니다. 수집량 제한이 지출 상한을 보장하지는 않으므로 Apify 사용량·청구 한도를 별도로 확인하세요.
+
+> **Refresh 버튼과 수집기 차이:** GitHub Pages는 정적 사이트여서 GitHub 비밀 토큰을 가진 서버 수집기를 버튼 하나로 직접 실행할 수 없습니다. **Refresh**는 현재 공개 영상 검색 및 배포된 데이터의 즉시 다시 읽기이고, **Instagram 재수집 ↗**는 GitHub의 안전한 수동 실행 화면을 여는 버튼입니다. Apify 토큰을 등록한 이후부터 Instagram을 새로 수집할 수 있습니다.
 
 ## GitHub Pages 켜기
 
