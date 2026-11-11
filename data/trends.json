@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "updated_at": null,
+  "source_status": {
+    "youtube": false,
+    "instagram": false,
+    "tiktok": false,
+    "news": false,
+    "google_trends": false,
+    "ai": false
+  },
+  "trends": [],
+  "leads": [],
+  "note": "영상 원본 수집 전에는 검색 링크와 예시만 표시됩니다."
+}
