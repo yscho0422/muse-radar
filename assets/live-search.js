@@ -20,7 +20,7 @@
   ];
   const EXTRA=['메이크업 챌린지','캐릭터 메이크업'];
   const cacheKey='muse-public-youtube-v4';
-  const TTL=1000*60*60*6;
+  const TTL=1000*60*15;
   const now=Date.now();
   const isId=id=>/^[a-zA-Z0-9_-]{11}$/.test(id||'');
   const isRecent=pub=>pub&&Date.now()-pub < 1000*60*60*24*14&&Date.now()-pub>-1000*60*60*24;
@@ -76,7 +76,7 @@
   }
   async function search(target, instance){
     const controller=new AbortController();
-    const timeout=setTimeout(()=>controller.abort(),6500);
+    const timeout=setTimeout(()=>controller.abort(),4300);
     try{
       const url=new URL('/api/v1/search',instance);
       url.searchParams.set('q',target.q);
@@ -88,28 +88,32 @@
       return normalize(await r.json(),target);
     }finally{clearTimeout(timeout)}
   }
-  async function run(){
+  async function run(force=false, onStatus=()=>{}){
     let cached=null;
     try {cached=JSON.parse(localStorage.getItem(cacheKey)||'null')}catch{}
-    if(cached?.time && Date.now()-cached.time<TTL && Array.isArray(cached.trends)){
-      window.MuseRadarAddDiscovered?.({trends:cached.trends});return;
+    if(!force && cached?.time && Date.now()-cached.time<TTL && Array.isArray(cached.trends)){
+      window.MuseRadarAddDiscovered?.({trends:cached.trends});return {source:'cache',videos:cached.trends.reduce((n,t)=>n+(t.source_posts?.length||0),0),available:true};
     }
     // Sequential instance failover, not repeated bulk traffic.
-    const results=[];
-    let working=0;
-    for(const target of [...TARGETS,...EXTRA.map(q=>({id:null,title:q,q}))]){
-      let rows=[];
+    const lookups=[...TARGETS,...EXTRA.map(q=>({id:null,title:q,q}))];
+    const results=await Promise.all(lookups.map(async target=>{
+      let rows=[];let available=false;
       for(const instance of INSTANCES){
-        try {rows=await search(target,instance);working++;break;}catch{}
+        try {rows=await search(target,instance);available=true;break;}catch{}
       }
-      results.push({target,posts:rows});
-    }
-    if(!working)return;
+      return {target,posts:rows,available};
+    }));
+    const working=results.filter(r=>r.available).length;
+    if(!working){onStatus('공개 영상 검색 서비스 응답 없음');return {source:'none',videos:0,available:false};}
     const trends=[...buildData(results.filter(r=>r.target.id)),...discoverUnknown(results.filter(r=>!r.target.id))];
     try{localStorage.setItem(cacheKey,JSON.stringify({time:Date.now(),trends}))}catch{}
     if(trends.length)window.MuseRadarAddDiscovered?.({trends});
+    const videos=new Set(trends.flatMap(t=>(t.source_posts||[]).map(p=>p.url))).size;
+    onStatus('검색한 공개 영상 '+videos+'개 · Instagram 최신 검색은 별도 데이터 연결 필요');
+    return {source:'public-search',videos,available:true};
   }
-  const delay=()=>run().catch(()=>{});
+  window.MuseRadarSearchNow = (callback)=>run(true,callback);
+  const delay=()=>run(false).catch(()=>{});
   delay();
   setInterval(delay,TTL);
 })();
