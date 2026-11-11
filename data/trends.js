@@ -1,1 +1,16 @@
-window.__MUSE_DATA__ = {"version":2,"updated_at":null,"source_status":{"youtube":false,"instagram":false,"tiktok":false,"news":false,"google_trends":false,"ai":false},"trends":[],"leads":[],"note":"영상 원본 수집 전에는 검색 링크와 예시만 표시됩니다."};
+// Generated daily. Never insert API keys here.
+window.__MUSE_DATA__ = {
+  "version": 2,
+  "updated_at": "2026-11-11T18:20:13.145393+00:00",
+  "source_status": {
+    "youtube": false,
+    "instagram": false,
+    "tiktok": false,
+    "ai": false,
+    "news": true,
+    "google_trends": true
+  },
+  "trends": [],
+  "leads": [],
+  "note": "확인된 원본 영상과 미검증 뉴스·검색 키워드는 구분하여 표시합니다."
+};
