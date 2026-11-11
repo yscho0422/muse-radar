@@ -174,6 +174,7 @@ def apify(actor, params, token):
 
 
 def collect_social(token):
+    """Public-source data discovery. Third-party Apify service can incur charges."""
     posts, status = [], {"instagram": False, "tiktok": False}
     try:
         # Source: Apify's official Instagram Hashtag Scraper actor.
@@ -227,6 +228,8 @@ def collect_social(token):
             })
     except Exception as e:
         print("Instagram collection:", plain(e))
+    if not os.getenv("ENABLE_TIKTOK") == "1":
+        return posts, status
     try:
         rows = apify("clockworks/tiktok-scraper", {"hashtags": ["캐릭터메이크업", "로블록스메이크업", "토미에메이크업"], "resultsPerPage": 20, "shouldDownloadVideos": False}, token)
         status["tiktok"] = True
@@ -290,7 +293,7 @@ def run():
     source_status = {"youtube": False, "instagram": False, "tiktok": False, "ai": False, **lead_status}
     if os.getenv("YOUTUBE_API_KEY"):
         incoming, source_status["youtube"] = collect_youtube(os.environ["YOUTUBE_API_KEY"])
-    if os.getenv("APIFY_TOKEN"):
+    if os.getenv("APIFY_TOKEN") and os.getenv("ENABLE_INSTAGRAM", "1") == "1":
         found, social_status = collect_social(os.environ["APIFY_TOKEN"])
         incoming.extend(found)
         source_status.update(social_status)
