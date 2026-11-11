@@ -173,15 +173,38 @@ def apify(actor, params, token):
 def collect_social(token):
     posts, status = [], {"instagram": False, "tiktok": False}
     try:
-        rows = apify("apify/instagram-hashtag-scraper", {"hashtags": ["캐릭터메이크업", "로블록스메이크업", "토미에메이크업"], "resultsType": "reels", "resultsLimit": 20}, token)
+        # Apify public Instagram hashtag discovery. Keep access token only in
+        # GitHub Actions Secrets, NEVER in browser JavaScript.
+        # This is a third-party provider; it is NOT the official Instagram API.
+        rows = apify("apify/instagram-scraper", {
+            "search": "캐릭터메이크업",
+            "searchType": "hashtag",
+            "resultsType": "reels",
+            "resultsLimit": 35,
+            "searchLimit": 10
+        }, token)
         status["instagram"] = True
         for item in rows:
             typ = str(item.get("type") or item.get("productType") or "").lower()
             if not ("video" in typ or "reel" in typ or item.get("isVideo") is True):
                 continue
             code = item.get("shortCode") or item.get("shortcode")
-            url = item.get("url") or item.get("postUrl") or ("https://www.instagram.com/reel/" + str(code) + "/" if code else "")
-            posts.append({"platform": "instagram", "url": url, "title": plain(item.get("caption") or item.get("text"), 140), "caption": plain(item.get("caption") or item.get("text"), 500), "author": plain(item.get("ownerUsername") or item.get("username"), 80), "published_at": item.get("timestamp") or item.get("takenAtTimestamp"), "thumbnail": item.get("displayUrl"), "views": item.get("videoViewCount")})
+            # Always use canonical /reel/ URLs, not a CDN or scraper URL.
+            url = "https://www.instagram.com/reel/" + str(code) + "/" if code else item.get("url") or item.get("postUrl")
+            thumbnail = (
+                item.get("coverUrl") or item.get("displayUrl")
+                or item.get("thumbnailUrl") or item.get("thumbnail")
+            )
+            posts.append({
+                "platform": "instagram", "url": url,
+                "title": plain(item.get("caption") or item.get("text"), 140),
+                "caption": plain(item.get("caption") or item.get("text"), 500),
+                "author": plain(item.get("ownerUsername") or item.get("username"), 80),
+                "published_at": item.get("takenAt") or item.get("timestamp") or item.get("takenAtTimestamp"),
+                "thumbnail": thumbnail if str(thumbnail or "").startswith("https://") else None,
+                "views": item.get("views") or item.get("videoViewCount"),
+                "source_method": "public-instagram-provider",
+            })
     except Exception as e:
         print("Instagram:", plain(e))
     try:
