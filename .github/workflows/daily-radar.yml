@@ -1,11 +1,11 @@
-name: MUSE RADAR daily refresh and Pages deploy
+name: MUSE RADAR refresh + Pages deploy
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
   schedule:
-    - cron: '10 9 * * *'
+    - cron: '17 */2 * * *'
       timezone: 'Asia/Seoul'
 
 permissions:
@@ -34,6 +34,9 @@ jobs:
         env:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+          ENABLE_INSTAGRAM: "1"
+          ENABLE_TIKTOK: "0"
+          IG_RESULTS_PER_TAG: "4"
         run: python scripts/update.py
       - name: Commit refreshed public data
         run: |
