@@ -35,7 +35,7 @@ function render(){const sample=isExampleMode(),cards=visibleData();let filtered=
  $('creativeNote').textContent=filtered.length?(filtered[0].example?'캐릭터의 눈매와 입술을 현실적으로 재해석하고, 마지막 1초에 원본 레퍼런스를 공개하는 Before / After 릴스.':`‘${filtered[0].title}’ 콘셉트를 3초 훅 → 디테일 클로즈업 → 완성 컷으로 구성해보세요.`):'평소 좋아하는 메이크업을 3초 훅과 전후 변신 컷으로 편집해보세요.';
  const leads=data.leads||[];$('leadsCount').textContent=String(leads.length).padStart(2,'0');$('leadList').innerHTML=leads.length?leads.slice(0,9).map(leadHTML).join(''):'<div class="empty-leads">별도로 확인된 키워드 후보가 아직 없어요. &nbsp; <a href="https://trends.google.com/trending?geo=KR" target="_blank" rel="noopener noreferrer">한국 트렌드 보기 ↗</a></div>';
  }
-function cardHTML(t,i){const cat=categoryNames[t.category]||'뷰티 콘셉트';const art=['roblox','tomie','daily'].includes(t.art)?t.art:'default';const proof=t.source_posts||[];const thumb=t.thumbnail?safeURL(t.thumbnail):'#';const img=thumb==='#'?'':`<img src="${escapeHTML(thumb)}" loading="lazy" alt="${escapeHTML(t.title)} 관련 공개 영상 썸네일" onerror="this.remove()">`;const artMarkup=img?'':(art==='roblox'?'<div class="art-halo"></div><div class="art-avatar"><span class="art-eye left"></span><span class="art-eye right"></span></div>':art==='tomie'?'<div class="art-halo"></div><div class="art-tomie"></div><div class="art-strand"></div><div class="art-tomie-mole"></div>':'<div class="art-halo"></div>');return `<article class="trend-card"><div class="card-visual" data-art="${art}" data-open="${escapeHTML(t.id)}" role="button" tabindex="0" aria-label="${escapeHTML(t.title)} 자세히 보기">${img}${artMarkup}<span class="visual-tag">${escapeHTML(cat)}</span><button class="visual-save ${saved.has(t.id)?'saved':''}" data-save="${escapeHTML(t.id)}" aria-label="${saved.has(t.id)?'저장 취소':'트렌드 저장'}" title="저장하기">${saved.has(t.id)?'♥':'♡'}</button><span class="card-index">${String(i+1).padStart(2,'0')} / RADAR</span><span class="card-type">${t.example?'CONCEPT EXAMPLE':escapeHTML(t.source_posts?.[0]?.platform||'SOCIAL VIDEO')}</span></div><div class="card-info"><div class="card-eyebrow"><span>${escapeHTML(t.subtitle||'K-BEAUTY / MAKEUP')}</span><span class="signal-pill">${escapeHTML(t.status||'관찰 중')}</span></div><h3 class="card-title">${escapeHTML(t.title)}</h3><p class="card-desc">${escapeHTML(t.description||'새롭게 등장한 메이크업 콘셉트를 살펴보세요.')}</p><div class="card-meta"><span>${t.example?'원본 영상 미확인':`<strong>${fmtNum(proof.length)}</strong>개 링크 · <strong>${fmtNum(t.author_count)}</strong>명 크리에이터`}</span><button data-open="${escapeHTML(t.id)}">${t.example?'주제 살펴보기':'릴스 보기 ▶'}</button></div></div></article>`}
+function cardHTML(t,i){const cat=categoryNames[t.category]||'뷰티 콘셉트';const art=['roblox','tomie','daily'].includes(t.art)?t.art:'default';const proof=t.source_posts||[];const thumbnail=t.thumbnail||(t.source_posts||[]).find(p=>p.thumbnail)?.thumbnail;const thumb=thumbnail?safeURL(thumbnail):'#';const img=thumb==='#'?'':`<img src="${escapeHTML(thumb)}" loading="lazy" alt="${escapeHTML(t.title)} 영상의 실제 썸네일" referrerpolicy="no-referrer" onerror="this.remove()">`;const artMarkup=(art==='roblox'?'<div class="art-halo"></div><div class="art-avatar"><span class="art-eye left"></span><span class="art-eye right"></span></div>':art==='tomie'?'<div class="art-halo"></div><div class="art-tomie"></div><div class="art-strand"></div><div class="art-tomie-mole"></div>':'<div class="art-halo"></div>');return `<article class="trend-card"><div class="card-visual" data-art="${art}" data-open="${escapeHTML(t.id)}" role="button" tabindex="0" aria-label="${escapeHTML(t.title)} 자세히 보기">${img}${artMarkup}<span class="visual-tag">${escapeHTML(cat)}</span><button class="visual-save ${saved.has(t.id)?'saved':''}" data-save="${escapeHTML(t.id)}" aria-label="${saved.has(t.id)?'저장 취소':'트렌드 저장'}" title="저장하기">${saved.has(t.id)?'♥':'♡'}</button><span class="card-index">${String(i+1).padStart(2,'0')} / RADAR</span><span class="card-type">${t.example?'CONCEPT EXAMPLE':escapeHTML(t.source_posts?.[0]?.platform||'SOCIAL VIDEO')}</span></div><div class="card-info"><div class="card-eyebrow"><span>${escapeHTML(t.subtitle||'K-BEAUTY / MAKEUP')}</span><span class="signal-pill">${escapeHTML(t.status||'관찰 중')}</span></div><h3 class="card-title">${escapeHTML(t.title)}</h3><p class="card-desc">${escapeHTML(t.description||'새롭게 등장한 메이크업 콘셉트를 살펴보세요.')}</p><div class="card-meta"><span>${t.example?'원본 영상 미확인':`<strong>${fmtNum(proof.length)}</strong>개 링크 · <strong>${fmtNum(t.author_count)}</strong>명 크리에이터`}</span><button data-open="${escapeHTML(t.id)}">${t.example?'주제 살펴보기':'릴스 보기 ▶'}</button></div></div></article>`}
 function leadHTML(t){return `<div class="lead-card"><span>${escapeHTML((t.source||'SEARCH').toUpperCase())} · ${escapeHTML(fmtDate(t.published_at))}</span><h4>${escapeHTML(t.title)}</h4><p>${escapeHTML(t.description||'검색 결과에서 관찰된 키워드입니다. 숏폼 확산 여부는 미검증입니다.')}</p><a href="${escapeHTML(safeURL(t.url))}" target="_blank" rel="noopener noreferrer">관련 출처 확인 ↗</a></div>`}
 function sourceHTML(){const s=data.source_status||{};const labels=[['youtube','로그인 없는 YouTube 탐색','사이트를 열면 공개 검색 서버에 한국어 메이크업을 조회해 최근 14일 영상을 찾아요. 서버 제한으로 실패할 수 있어요.'],['instagram','Instagram 원본 링크','공개 트렌드 리포트가 소개한 원본 링크를 보관합니다. 새 릴스를 자동 수집하는 API 연결은 없어요.'],['tiktok','TikTok 원본 링크','공개 트렌드 리포트가 소개한 원본 링크를 보관합니다. 플랫폼 검색·재생은 접근 제한이 있을 수 있어요.']];return `<div class="source-intro"><div class="section-kicker">HOW IT WORKS / SOURCES</div><h2>공개 영상 링크를,<br>한 곳에 모았어요.</h2><p>외부 계정 연결 없이 작동하는 버전이에요. 이미 확보한 링크는 저장돼 있고, 열 때마다 추가 공개 영상 검색을 시도합니다. 브라우저를 닫은 동안 웹사이트 자체가 매일 갱신되는 구조는 아니에요.</p><p style="margin-top:9px;font-weight:800">마지막 실행: ${escapeHTML(data.updated_at?new Date(data.updated_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}):'아직 없음')} · 원본 영상 링크는 2026년 11월 11일 확인된 공개 리포트 기준</p></div>${labels.map(([key,title,desc])=>`<div class="source-item"><div><strong>${escapeHTML(title)}</strong><p>${escapeHTML(desc)}</p></div><span class="${s[key]?'active-source':''}">${s[key]?'● 공개 검색 성공':'○ 실시간 연결 없음'}</span></div>`).join('')}<div class="source-item"><div><strong>정확도에 관한 약속</strong><p>공개 자료에 기재된 링크를 모았으며 플랫폼이 영상 접근을 막을 수 있습니다. 확인되지 않은 조회수와 유행 상승률은 만들지 않아요. 플랫폼 전체 인기 순위가 아니에요.</p></div><span>TRANSPARENT</span></div>`}
 function renderSources(){}
@@ -109,11 +109,50 @@ window.MuseRadarAddDiscovered=function incoming(update){
  for(const newer of update.trends){
   if(!newer||!newer.id||!Array.isArray(newer.source_posts))continue;
   const existing=(data.trends||[]).find(t=>t.id===newer.id);
-  if(existing){const old=new Set((existing.source_posts||[]).map(p=>p.url));for(const post of newer.source_posts){if(!old.has(post.url)){existing.source_posts.push(post);old.add(post.url)}}existing.post_count=existing.source_posts.length;existing.author_count=new Set(existing.source_posts.map(p=>p.author).filter(Boolean)).size;existing.example=false;existing.status=existing.snapshot?'원본 링크 + 공개 검색':'공개 검색 영상 추가';existing.latest_at=[existing.latest_at,newer.latest_at].filter(Boolean).sort().at(-1);}
+  if(existing){const old=new Set((existing.source_posts||[]).map(p=>p.url));for(const post of newer.source_posts){if(!old.has(post.url)){existing.source_posts.push(post);old.add(post.url)}}existing.post_count=existing.source_posts.length;existing.author_count=new Set(existing.source_posts.map(p=>p.platform+':'+(p.author||p.url))).size;existing.thumbnail=existing.thumbnail||newer.thumbnail||existing.source_posts.find(p=>p.thumbnail)?.thumbnail||null;existing.example=false;existing.status=existing.snapshot?'원본 링크 + 공개 검색':'공개 검색 영상 추가';existing.latest_at=[existing.latest_at,newer.latest_at].filter(Boolean).sort().at(-1);}
   else data.trends.push(newer);
  }
  data.live_discovery=true;data.source_status.youtube=true;render();
 };
+
+window.MuseRadarApplySnapshot = function(fresh) {
+ if(!fresh || !Array.isArray(fresh.trends))return false;
+ const liveItems=(data.trends||[]).filter(t=>t.source_method==='public-search'||t.source_method==='browser-search');
+ data={...fresh,trends:[...fresh.trends]};
+ for(const t of liveItems){
+  const existing=data.trends.find(x=>x.id===t.id);
+  if(!existing)data.trends.push(t);
+  else{const set=new Set((existing.source_posts||[]).map(x=>x.url));for(const p of t.source_posts||[]){if(!set.has(p.url)){existing.source_posts.push(p);set.add(p.url)}}}
+ }
+ render();return true;
+};
+let refreshRunning=false;
+const refreshBtn=$('refreshButton');
+if(refreshBtn)refreshBtn.addEventListener('click',async()=>{
+ if(refreshRunning)return;
+ refreshRunning=true;refreshBtn.disabled=true;refreshBtn.setAttribute('aria-busy','true');
+ const label=refreshBtn.querySelector('.refresh-label');if(label)label.textContent='찾는 중…';
+ const status=$('refreshStatus');if(status)status.textContent='최신 데이터와 공개 영상 검색을 확인하고 있어요…';
+ let snapshot=false,live=null;
+ const jobs=[
+  fetch('data/trends.json?fresh='+Date.now(),{cache:'no-store'}).then(async r=>{
+   if(!r.ok)throw Error('snapshot unavailable');
+   snapshot=window.MuseRadarApplySnapshot(await r.json());
+  }).catch(()=>{}),
+  Promise.resolve().then(()=>window.MuseRadarSearchNow?.()).then(result=>{live=result||null}).catch(()=>{})
+ ];
+ try{await Promise.all(jobs)}finally{
+  refreshBtn.disabled=false;refreshBtn.setAttribute('aria-busy','false');refreshRunning=false;
+  if(label)label.textContent='↻ Refresh';
+  const message=live?.available
+   ? '지금 검색 완료 · 공개 짧은 영상 후보 '+(live.videos||0)+'개 확인 · Instagram 실시간 검색은 데이터 연결이 필요해요.'
+   :snapshot
+    ? '저장된 최신 데이터 확인 완료 · 공개 영상 실시간 검색은 응답하지 않았어요. Instagram 데이터 연결은 아직 없어요.'
+    :'현재 공개 검색 서버에 연결할 수 없어 기존 자료를 유지했어요.';
+  if(status)status.textContent=message;
+  if(live?.available)toast('현재 확인 가능한 영상 검색을 완료했어요');
+ }
+});
 const now=new Date();$('todayText').textContent=new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'short',day:'numeric',weekday:'short'}).format(now);render();
 })();
 
