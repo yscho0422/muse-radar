@@ -38,13 +38,13 @@ KEYWORDS = [
 STOPWORDS = {"데일리", "한국", "기본", "추천", "초간단", "최신", "꾸안꾸", "인기", "뷰티", "요즘", "화장", "메이크업", "아이", "립", "숏폼"}
 
 
-def request(url, payload=None, headers=None):
+def request(url, payload=None, headers=None, timeout=38):
     body = json.dumps(payload, ensure_ascii=False).encode("utf-8") if payload is not None else None
     extra = {"User-Agent": "MuseRadar/1.0 (public source research)", "Accept": "*/*", **(headers or {})}
     if body is not None:
         extra["Content-Type"] = "application/json"
     req = urllib.request.Request(url, data=body, headers=extra, method="POST" if body else "GET")
-    with urllib.request.urlopen(req, timeout=38) as resp:
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
         return resp.read(6_000_000)
 
 
@@ -52,8 +52,11 @@ def timestamp(value):
     if not value:
         return None
     try:
-        if isinstance(value, (float, int)):
-            return dt.datetime.fromtimestamp(float(value), tz=dt.timezone.utc)
+        if isinstance(value, (float, int)) or (isinstance(value, str) and value.strip().replace(".", "", 1).isdigit()):
+            numeric = float(value)
+            if numeric > 1e12:
+                numeric /= 1000
+            return dt.datetime.fromtimestamp(numeric, tz=dt.timezone.utc)
         return dt.datetime.fromisoformat(str(value).replace("Z", "+00:00")).astimezone(dt.timezone.utc)
     except (TypeError, ValueError, OverflowError):
         try:
@@ -166,47 +169,64 @@ def collect_youtube(api_key):
 def apify(actor, params, token):
     actor = urllib.parse.quote(actor.replace("/", "~"), safe="~")
     endpoint = "https://api.apify.com/v2/acts/" + actor + "/run-sync-get-dataset-items?format=json&clean=true&timeout=150"
-    rows = json.loads(request(endpoint, params, {"Authorization": "Bearer " + token}))
+    rows = json.loads(request(endpoint, params, {"Authorization": "Bearer " + token}, timeout=175))
     return rows if isinstance(rows, list) else []
 
 
 def collect_social(token):
     posts, status = [], {"instagram": False, "tiktok": False}
     try:
-        # Apify public Instagram hashtag discovery. Keep access token only in
-        # GitHub Actions Secrets, NEVER in browser JavaScript.
-        # This is a third-party provider; it is NOT the official Instagram API.
-        rows = apify("apify/instagram-scraper", {
-            "search": "캐릭터메이크업",
-            "searchType": "hashtag",
+        # Source: Apify's official Instagram Hashtag Scraper actor.
+        # Its schema accepts "hashtags", "resultsType": "reels" and
+        # "resultsLimit". Requests use the secret APIFY_TOKEN on the runner,
+        # never inside public JavaScript.
+        #
+        # Rotating hashtags bounds paid volume while still exploring new looks.
+        rotating_tags = [
+            "로블록스메이크업", "토미에메이크업", "메이크업챌린지",
+            "아트메이크업", "코스프레메이크업", "고양이메이크업",
+            "인형메이크업", "픽셀메이크업"
+        ]
+        rotation = (NOW.timetuple().tm_yday * 12 + NOW.hour // 2) % len(rotating_tags)
+        selected_tags = ["메이크업", "캐릭터메이크업", rotating_tags[rotation]]
+        max_per_tag = max(1, min(10, int(os.getenv("IG_RESULTS_PER_TAG", "4"))))
+        rows = apify("apify/instagram-hashtag-scraper", {
+            "hashtags": selected_tags,
             "resultsType": "reels",
-            "resultsLimit": 35,
-            "searchLimit": 10
+            "keywordSearch": False,
+            "resultsLimit": max_per_tag
         }, token)
         status["instagram"] = True
         for item in rows:
+            if not isinstance(item, dict):
+                continue
             typ = str(item.get("type") or item.get("productType") or "").lower()
             if not ("video" in typ or "reel" in typ or item.get("isVideo") is True):
                 continue
             code = item.get("shortCode") or item.get("shortcode")
-            # Always use canonical /reel/ URLs, not a CDN or scraper URL.
-            url = "https://www.instagram.com/reel/" + str(code) + "/" if code else item.get("url") or item.get("postUrl")
+            raw_url = item.get("url") or item.get("postUrl") or ""
+            match = re.search(r"/reel/([A-Za-z0-9_-]+)", str(raw_url))
+            code = code or (match.group(1) if match else None)
+            if not code:
+                continue
+            url = "https://www.instagram.com/reel/" + str(code) + "/"
             thumbnail = (
                 item.get("coverUrl") or item.get("displayUrl")
                 or item.get("thumbnailUrl") or item.get("thumbnail")
             )
+            caption = plain(item.get("caption") or item.get("text"), 500)
             posts.append({
                 "platform": "instagram", "url": url,
                 "title": plain(item.get("caption") or item.get("text"), 140),
-                "caption": plain(item.get("caption") or item.get("text"), 500),
+                "caption": caption,
                 "author": plain(item.get("ownerUsername") or item.get("username"), 80),
                 "published_at": item.get("takenAt") or item.get("timestamp") or item.get("takenAtTimestamp"),
                 "thumbnail": thumbnail if str(thumbnail or "").startswith("https://") else None,
                 "views": item.get("views") or item.get("videoViewCount"),
-                "source_method": "public-instagram-provider",
+                "source_method": "apify-instagram-hashtag-reels",
             })
     except Exception as e:
-        print("Instagram:", plain(e))
+        print("Instagram collection:", plain(e))
     try:
         rows = apify("clockworks/tiktok-scraper", {"hashtags": ["캐릭터메이크업", "로블록스메이크업", "토미에메이크업"], "resultsPerPage": 20, "shouldDownloadVideos": False}, token)
         status["tiktok"] = True
