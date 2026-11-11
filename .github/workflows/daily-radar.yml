@@ -28,6 +28,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Run offline integrity tests
+        run: python -m unittest discover -s tests -v
       - name: Update trend data
         env:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
@@ -45,15 +47,17 @@ jobs:
 
   deploy:
     needs: refresh
-    if: always() && needs.refresh.result == 'success'
+    if: needs.refresh.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Check out project
+      - name: Check out latest website data
         uses: actions/checkout@v4
+        with:
+          ref: main
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Prepare site
