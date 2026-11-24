@@ -1,7 +1,7 @@
 // Generated daily. Never insert API keys here.
 window.__MUSE_DATA__ = {
   "version": 2,
-  "updated_at": "2026-11-24T22:08:16.984941+00:00",
+  "updated_at": "2026-11-24T23:57:01.967568+00:00",
   "source_status": {
     "youtube": false,
     "instagram": false,
