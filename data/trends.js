@@ -1,7 +1,7 @@
 // Generated daily. Never insert API keys here.
 window.__MUSE_DATA__ = {
   "version": 2,
-  "updated_at": "2026-11-27T00:06:03.773639+00:00",
+  "updated_at": "2026-11-27T02:24:51.306441+00:00",
   "source_status": {
     "youtube": false,
     "instagram": false,
@@ -11,6 +11,14 @@ window.__MUSE_DATA__ = {
     "google_trends": true
   },
   "trends": [],
-  "leads": [],
+  "leads": [
+    {
+      "title": "K뷰티 다음 ’K등산’이 뜬다! 이주의 유행템 6 - 캐릿 Careet",
+      "url": "https://news.google.com/rss/articles/CBMiQEFVX3lxTE1INTBsOVRhTjFLdGxwalVWWVRjRUtmYkZJTE1YTlVXTW1BWDdRMndUUFhOZzN4cnkyTVYzZWdpS1o?oc=5",
+      "description": "뉴스·검색 키워드: 릴스 유행 여부는 미검증.",
+      "source": "news",
+      "published_at": "2026-11-27T01:01:19+00:00"
+    }
+  ],
   "note": "확인된 원본 영상과 미검증 뉴스·검색 키워드는 구분하여 표시합니다."
 };
